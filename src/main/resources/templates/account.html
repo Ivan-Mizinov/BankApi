@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org/" lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Мой счёт</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; }
+    h2 { color: #333; }
+    .account-info {
+      border: 1px solid #ddd;
+      padding: 15px;
+      border-radius: 5px;
+      max-width: 400px;
+    }
+    .label { font-weight: bold; }
+    .no-account {
+      color: #777;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+<h2>Добро пожаловать, <span th:text="${user.login}"></span>!</h2>
+
+<div th:if="${account == null}" class="no-account">
+  <p>У вас пока нет открытого счёта.</p>
+</div>
+
+<div th:if="${account != null}" class="account-info">
+  <h3>Ваш счёт:</h3>
+  <p><span class="label">Номер счёта:</span> <span th:text="${account.accountNumber}"></span></p>
+  <p><span class="label">Тип:</span> <span th:text="${account.accountType.displayName}"></span></p>
+  <p><span class="label">Баланс:</span> <span th:text="${#numbers.formatCurrency(account.balance)}"></span></p>
+</div>
+
+<a href="/logout">Выйти</a>
+</body>
+</html>

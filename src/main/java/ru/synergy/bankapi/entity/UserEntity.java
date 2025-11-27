@@ -8,13 +8,15 @@ import lombok.Data;
 
 @Entity
 @Data
+@Table(name = "clients")
 public class UserEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @NotBlank(message = "Логин не может быть пустым")
-    @Size(min = 8, max = 20, message = "Логин должен быть от 8 до 20 символов")
+    @Size(min = 5, max = 20, message = "Логин должен быть от 8 до 20 символов")
+    @Column(unique = true)
     private String login;
 
     @NotBlank(message = "Пароль не может быть пустым")
@@ -23,4 +25,7 @@ public class UserEntity {
 
     @Enumerated(EnumType.STRING)
     private Role role;
+
+    @OneToOne(mappedBy = "user")
+    private AccountEntity account;
 }
