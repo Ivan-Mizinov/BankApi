@@ -1,6 +1,7 @@
 package ru.synergy.bankapi.service;
 
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.synergy.bankapi.entity.AccountEntity;
@@ -49,6 +50,7 @@ public class AccountService {
         transactionRepository.save(transaction);
     }
 
+    @Transactional
     public void withdrawFromAccount(BigDecimal amount) {
         validateAmount(amount, "снятия");
 
@@ -72,6 +74,57 @@ public class AccountService {
 
         accountRepository.save(account);
         transactionRepository.save(transaction);
+    }
+
+    @Transactional
+    public void transferToUser(String recipientLogin, BigDecimal amount) {
+        validateAmount(amount, "перевода");
+
+        AccountEntity senderAccount = fetchUserAccount();
+        UserEntity sender = getCurrentUser();
+
+        if (senderAccount.getBalance().compareTo(amount) < 0) {
+            throw new InsufficientFundsException(
+                    "Недостаточно средств на счёте. " +
+                    "Текущий баланс: " + senderAccount.getBalance() +
+                    ", запрашиваемая сумма: " + amount
+            );
+        }
+
+        UserEntity recipient = userRepository.findByLogin(recipientLogin)
+                .orElseThrow(() -> new UsernameNotFoundException("Пользователь с логином " + recipientLogin + " не найден"));
+        AccountEntity recipientAccount = accountRepository.findByUserId(recipient.getId());
+        if (recipientAccount == null) {
+            throw new IllegalArgumentException("Счёт получателя не найден");
+        }
+
+        if (sender.getId().equals(recipient.getId())) {
+            throw new IllegalArgumentException("Нельзя перевести средства самому себе");
+        }
+
+        senderAccount.setBalance(senderAccount.getBalance().subtract(amount));
+        recipientAccount.setBalance(recipientAccount.getBalance().add(amount));
+
+        TransactionEntity senderTransaction = createTransaction(
+                senderAccount,
+                amount,
+                "Перевод пользователю " + recipientLogin,
+                TransactionType.TRANSFER_OUT
+        );
+        TransactionEntity recipientTransaction = createTransaction(
+                recipientAccount,
+                amount,
+                "Перевод от пользователя " + sender.getLogin(),
+                TransactionType.TRANSFER_IN
+        );
+
+        senderAccount.getTransactions().add(senderTransaction);
+        recipientAccount.getTransactions().add(recipientTransaction);
+
+        accountRepository.save(senderAccount);
+        accountRepository.save(recipientAccount);
+        transactionRepository.save(senderTransaction);
+        transactionRepository.save(recipientTransaction);
     }
 
     private void validateAmount(BigDecimal amount, String operation) {
