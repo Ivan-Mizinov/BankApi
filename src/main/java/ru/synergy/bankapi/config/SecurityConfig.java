@@ -35,7 +35,10 @@ public class SecurityConfig {
                         .failureUrl("/login?error=true")
                 )
                 .logout(logout -> logout
+                        .logoutUrl("/logout")
                         .logoutSuccessUrl("/login")
+                        .invalidateHttpSession(true)
+                        .deleteCookies("JSESSIONID")
                         .permitAll()
                 )
                 .userDetailsService(userDetailsService)

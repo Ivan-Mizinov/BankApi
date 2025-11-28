@@ -20,7 +20,6 @@ public class UserEntity {
     private String login;
 
     @NotBlank(message = "Пароль не может быть пустым")
-    @Size(min = 8, max = 20, message = "Пароль должен быть от 8 до 20 символов")
     private String passwordHash;
 
     @Enumerated(EnumType.STRING)

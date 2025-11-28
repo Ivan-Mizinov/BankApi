@@ -82,9 +82,16 @@
     </button>
   </form>
 
-  <a href="/logout" style="padding: 8px 16px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 4px; display: inline-block;">
-    Выйти
+  <a th:href="@{/change-password}" style="padding: 8px 16px; background-color: #ffc107; color: white; text-decoration: none; border-radius: 4px; display: inline-block;">
+    Сменить пароль
   </a>
+
+  <form th:action="@{/logout}" method="post" style="display: inline;">
+    <button type="submit"
+            style="padding: 8px 16px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 4px; border: none; cursor: pointer;">
+      Выйти
+    </button>
+  </form>
 </div>
 
 </body>
