@@ -19,25 +19,45 @@
 
 <div th:if="${account != null and #lists.size(transactions) > 0}" class="transactions-info" style="margin-top: 20px; float: right; width: 40%; border: 1px solid #ddd; padding: 15px; border-radius: 5px;">
   <h3>Последние транзакции:</h3>
-  <table style="width: 100%; border-collapse: collapse;">
+  <table style="width: 60%; border-collapse: collapse; margin: 0 auto;">
     <thead>
     <tr style="background-color: #f2f2f2;">
-      <th style="text-align: left; padding: 8px;">Дата</th>
-      <th style="text-align: left; padding: 8px;">Сумма</th>
       <th style="text-align: left; padding: 8px;">Тип</th>
-      <th style="text-align: left; padding: 8px;">Описание</th>
+      <th style="text-align: left; padding: 8px;">Сумма</th>
     </tr>
     </thead>
     <tbody>
-    <tr th:each="transaction : ${transactions}" style="border-bottom: 1px solid #ddd;">
-      <td style="padding: 8px;" th:text="${#temporals.format(transaction.date, 'dd.MM.yyyy HH:mm')}"></td>
-      <td style="padding: 8px;" th:text="${#numbers.formatCurrency(transaction.amount)}"></td>
+    <tr th:each="transaction : ${transactions}"
+        class="transaction-row"
+        style="border-bottom: 1px solid #ddd; cursor: pointer;"
+        th:attr="data-date=${#temporals.format(transaction.date, 'dd.MM.yyyy HH:mm')},
+                         data-description=${transaction.description}">
       <td style="padding: 8px;" th:text="${transaction.transactionType.displayName}"></td>
-      <td style="padding: 8px;" th:text="${transaction.description}"></td>
+      <td style="padding: 8px;" th:text="${#numbers.formatCurrency(transaction.amount)}"></td>
     </tr>
     </tbody>
   </table>
 </div>
+
+<div id="transaction-tooltip" style="
+    display: none;
+    position: fixed;
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    padding: 12px;
+    max-width: 280px;
+    z-index: 1000;
+    font-size: 14px;
+    color: #333;
+  ">
+  <p style="margin: 0 0 4px 0; font-weight: bold;">Дата:</p>
+  <p id="tooltip-date" style="margin: 0 0 8px 0;"></p>
+  <p style="margin: 0 0 4px 0; font-weight: bold;">Описание:</p>
+  <p id="tooltip-description" style="margin: 0;"></p>
+</div>
+
 
 <div class="actions" style="margin-top: 20px; display: flex; flex-direction: column; align-items: flex-start; gap: 10px;">
   <form th:action="@{/deposit}" method="post" style="display: flex; align-items: center; gap: 5px;">
@@ -98,5 +118,46 @@
     </button>
   </form>
 </div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const rows = document.querySelectorAll('.transaction-row');
+    const tooltip = document.getElementById('transaction-tooltip');
+    const dateSpan = document.getElementById('tooltip-date');
+    const descSpan = document.getElementById('tooltip-description');
+
+    function hideTooltip() {
+      tooltip.style.display = 'none';
+    }
+
+    rows.forEach(row => {
+      row.addEventListener('click', function() {
+
+        const date = this.getAttribute('data-date');
+        const description = this.getAttribute('data-description');
+
+        dateSpan.textContent = date;
+        descSpan.textContent = description;
+
+        const rect = this.getBoundingClientRect();
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+        tooltip.style.top = `${rect.top + scrollTop - 8}px`;
+        tooltip.style.left = `${rect.left - 290}px`;
+
+        tooltip.style.display = 'block';
+
+        document.addEventListener('click', function(event) {
+          if (!tooltip.contains(event.target) && !row.contains(event.target)) {
+            hideTooltip();
+          }
+        }, { once: true });
+      });
+    });
+
+    tooltip.addEventListener('click', hideTooltip);
+
+  });
+</script>
 
 </body>
